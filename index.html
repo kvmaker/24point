@@ -64,14 +64,83 @@ function compareExpr(a, b) {
   return a.length - b.length || (a < b ? -1 : a > b ? 1 : 0);
 }
 
+function addTerms(node) {
+  if (node.num !== undefined) return [{ sign: 1, node: node }];
+  if (node.op === '+') return addTerms(node.left).concat(addTerms(node.right));
+  if (node.op === '-') {
+    return addTerms(node.left).concat(addTerms(node.right).map(function (t) {
+      return { sign: -t.sign, node: t.node };
+    }));
+  }
+  return [{ sign: 1, node: node }];
+}
+
+function mulFactors(node) {
+  if (node.num !== undefined) return [{ inv: false, node: node }];
+  if (node.op === '*') return mulFactors(node.left).concat(mulFactors(node.right));
+  if (node.op === '/') {
+    return mulFactors(node.left).concat(mulFactors(node.right).map(function (f) {
+      return { inv: !f.inv, node: f.node };
+    }));
+  }
+  return [{ inv: false, node: node }];
+}
+
+function absorbNeg(node) {
+  if (node.num !== undefined) return { num: -node.num };
+  if (node.op === '*' || node.op === '/') {
+    return { op: node.op, left: absorbNeg(node.left), right: node.right };
+  }
+  if (node.op === '+' || node.op === '-') return { negOf: node };
+  return node;
+}
+
+function invert(node) {
+  if (node.num !== undefined) return { invNum: node.num };
+  return { invOf: node };
+}
+
+function canonicalKey(node) {
+  if (node.invNum !== undefined) return 'inv(' + node.invNum + ')';
+  if (node.invOf !== undefined) return 'inv(' + canonicalKey(node.invOf) + ')';
+  if (node.negOf !== undefined) return 'neg(' + canonicalKey(node.negOf) + ')';
+
+  const terms = addTerms(node);
+  if (terms.length > 1 || terms[0].sign === -1) {
+    const keys = terms.map(function (t) {
+      return canonicalKey(t.sign === -1 ? absorbNeg(t.node) : t.node);
+    });
+    keys.sort();
+    return '(+ ' + keys.join(' ') + ')';
+  }
+
+  const atom = terms[0].node;
+  if (atom.num !== undefined) return String(atom.num);
+  if (atom.op === '*' || atom.op === '/') {
+    const keys = mulFactors(atom).map(function (f) {
+      return canonicalKey(f.inv ? invert(f.node) : f.node);
+    });
+    keys.sort();
+    return '(* ' + keys.join(' ') + ')';
+  }
+  return String(atom.num);
+}
+
 function solve(nums, options) {
   const allowFraction = !!(options && options.allowFraction);
   const results = [];
+  const seen = new Set();
 
   function walk(list) {
     if (list.length === 1) {
       const node = list[0];
-      if (node.value.d === 1 && node.value.n === 24) results.push(node.expr);
+      if (node.value.d === 1 && node.value.n === 24) {
+        const key = canonicalKey(node.expr);
+        if (!seen.has(key)) {
+          seen.add(key);
+          results.push(node.expr);
+        }
+      }
       return;
     }
     for (let i = 0; i < list.length; i++) {

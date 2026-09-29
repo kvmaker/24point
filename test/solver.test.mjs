@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const match = html.match(/\/\/ ===== SOLVER START =====([\s\S]*?)\/\/ ===== SOLVER END =====/);
 assert.ok(match, 'index.html 中未找到 SOLVER 标记');
-const api = new Function(match[1] + '\nreturn { solve: solve, render: render };')();
+const api = new Function(match[1] + '\nreturn { solve: solve, render: render, canonicalKey: canonicalKey };')();
 
 function valueOf(text) {
   return Function('return (' + text.replace(/×/g, '*').replace(/÷/g, '/') + ')')();
@@ -43,4 +43,42 @@ test('结果按长度升序、同长度按字典序排列', () => {
   const solutions = api.solve([2, 3, 4, 6]);
   const sorted = [...solutions].sort((a, b) => a.length - b.length || (a < b ? -1 : a > b ? 1 : 0));
   assert.deepEqual(solutions, sorted);
+});
+
+test('交换律归一：a+b 与 b+a 同键', () => {
+  const x = { op: '+', left: { num: 3 }, right: { num: 5 } };
+  const y = { op: '+', left: { num: 5 }, right: { num: 3 } };
+  assert.equal(api.canonicalKey(x), api.canonicalKey(y));
+});
+
+test('结合律归一：(a+b)+c 与 a+(b+c) 同键', () => {
+  const x = { op: '+', left: { op: '+', left: { num: 1 }, right: { num: 2 } }, right: { num: 3 } };
+  const y = { op: '+', left: { num: 1 }, right: { op: '+', left: { num: 2 }, right: { num: 3 } } };
+  assert.equal(api.canonicalKey(x), api.canonicalKey(y));
+});
+
+test('移项归一：(a-b)+c 与 (a+c)-b 同键', () => {
+  const x = { op: '+', left: { op: '-', left: { num: 9 }, right: { num: 4 } }, right: { num: 2 } };
+  const y = { op: '-', left: { op: '+', left: { num: 9 }, right: { num: 2 } }, right: { num: 4 } };
+  assert.equal(api.canonicalKey(x), api.canonicalKey(y));
+});
+
+test('约分位置归一：(a÷b)×c 与 (a×c)÷b 同键', () => {
+  const x = { op: '*', left: { op: '/', left: { num: 8 }, right: { num: 3 } }, right: { num: 6 } };
+  const y = { op: '/', left: { op: '*', left: { num: 8 }, right: { num: 6 } }, right: { num: 3 } };
+  assert.equal(api.canonicalKey(x), api.canonicalKey(y));
+});
+
+test('负号不会在规范化中丢失', () => {
+  const scaled = { op: '*', left: { op: '+', left: { num: 2 }, right: { num: 3 } }, right: { num: 4 } };
+  const withMinus = { op: '-', left: { num: 9 }, right: scaled };
+  const withoutMinus = { op: '+', left: { num: 9 }, right: scaled };
+  assert.notEqual(api.canonicalKey(withMinus), api.canonicalKey(withoutMinus));
+});
+
+test('求解结果中不存在重复算式', () => {
+  for (const nums of [[1, 2, 3, 4], [2, 2, 6, 6], [4, 4, 10, 10]]) {
+    const solutions = api.solve(nums);
+    assert.equal(new Set(solutions).size, solutions.length);
+  }
 });
