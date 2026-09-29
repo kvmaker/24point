@@ -43,10 +43,25 @@ function combine(a, b, op, allowFraction) {
   return { value: r, expr: { op: op, left: a.expr, right: b.expr } };
 }
 
+const PREC = { '+': 1, '-': 1, '*': 2, '/': 2 };
+const SYMBOL = { '+': '+', '-': '-', '*': '×', '/': '÷' };
+
+function renderOperand(node, parentPrec, isRight) {
+  const childPrec = node.num !== undefined ? Infinity : PREC[node.op];
+  const needParen = childPrec < parentPrec ||
+    (childPrec === parentPrec && isRight && parentPrec <= 2);
+  const text = render(node);
+  return needParen ? '(' + text + ')' : text;
+}
+
 function render(node) {
   if (node.num !== undefined) return String(node.num);
-  const sym = { '+': '+', '-': '-', '*': '×', '/': '÷' }[node.op];
-  return '(' + render(node.left) + ' ' + sym + ' ' + render(node.right) + ')';
+  const prec = PREC[node.op];
+  return renderOperand(node.left, prec, false) + ' ' + SYMBOL[node.op] + ' ' + renderOperand(node.right, prec, true);
+}
+
+function compareExpr(a, b) {
+  return a.length - b.length || (a < b ? -1 : a > b ? 1 : 0);
 }
 
 function solve(nums, options) {
@@ -80,7 +95,7 @@ function solve(nums, options) {
   }
 
   walk(nums.map(function (v) { return { value: { n: v, d: 1 }, expr: { num: v } }; }));
-  return results.map(render);
+  return results.map(render).sort(compareExpr);
 }
 // ===== SOLVER END =====
 </script>
