@@ -126,16 +126,16 @@ function canonicalKey(node) {
     });
     var totalFlipped = polarized.reduce(function (s, p) { return s + (p.flipped ? 1 : 0); }, 0);
     if (totalFlipped % 2 === 1) {
-      // 找规范键最大的已 flip 因子，改用其正极性形式，保证结果与因子遍历顺序无关
+      // 在所有因子中选键最大的那个翻回，与遍历顺序和写法表示均无关
       var maxIdx = -1;
       var maxCKey = '';
       for (var i = 0; i < polarized.length; i++) {
-        if (polarized[i].flipped && polarized[i].key > maxCKey) {
+        if (polarized[i].key > maxCKey) {
           maxCKey = polarized[i].key;
           maxIdx = i;
         }
       }
-      polarized[maxIdx] = { key: polarized[maxIdx].otherKey, otherKey: polarized[maxIdx].key, flipped: false };
+      polarized[maxIdx] = { key: polarized[maxIdx].otherKey, otherKey: polarized[maxIdx].key, flipped: !polarized[maxIdx].flipped };
     }
     var sortedKeys = polarized.map(function (p) { return p.key; });
     sortedKeys.sort();

@@ -92,3 +92,8 @@ test('镜像对（符号整体翻转）合并为一条：1 1 4 9', () => {
   const f2 = { op: '*', left: { op: '-', left: { num: 4 }, right: { num: 1 } }, right: { op: '-', left: { num: 9 }, right: { num: 1 } } };
   assert.equal(api.canonicalKey(f1), api.canonicalKey(f2));
 });
+
+test('镜像对合并：1 7 9 10（奇数 flip 只翻一个因子时两种写法仍相同键）', () => {
+  // (1-9)×(7-10) 与 (9-1)×(10-7) 应合并为 1 条
+  assert.equal(api.solve([1, 7, 9, 10]).length, 1);
+});
