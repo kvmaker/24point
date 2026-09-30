@@ -118,7 +118,12 @@ test('4 4 10 10 两种模式均有解，且分数模式每条求值均为 24', (
 });
 
 test('除零不产生解', () => {
-  for (const text of api.solve([5, 5, 5, 0], { allowFraction: true })) {
-    assert.doesNotThrow(() => valueOf(text));
+  // [0, 2, 3, 4] 含显式零，分数模式有 14 个解，每条都应有限且等于 24
+  const sols = api.solve([0, 2, 3, 4], { allowFraction: true });
+  assert.ok(sols.length > 0, '期望有解以确保断言真正执行');
+  for (const text of sols) {
+    const value = valueOf(text);
+    assert.ok(Number.isFinite(value), `${text} 求值不是有限数（除零未被拦截）`);
+    assert.ok(Math.abs(value - 24) < 1e-9, `${text} 求值不是 24`);
   }
 });
