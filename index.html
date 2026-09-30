@@ -280,5 +280,25 @@ document.getElementById('random-btn').addEventListener('click', function () {
   errorBox.hidden = true;
 });
 </script>
+<script>
+if (location.hash === '#selftest') {
+  const checks = [
+    ['3 3 8 8 整数模式无解', function () { return solve([3, 3, 8, 8]).length === 0; }],
+    ['3 3 8 8 分数模式有解', function () { return solve([3, 3, 8, 8], { allowFraction: true }).includes('8 ÷ (3 - 8 ÷ 3)'); }],
+    ['1 5 5 5 整数模式无解', function () { return solve([1, 5, 5, 5]).length === 0; }],
+    ['1 5 5 5 分数模式有解', function () { return solve([1, 5, 5, 5], { allowFraction: true }).length > 0; }],
+    ['4 4 10 10 两种模式均有解', function () { return solve([4, 4, 10, 10]).includes('(10 × 10 - 4) ÷ 4'); }],
+    ['1 1 1 1 无解', function () { return solve([1, 1, 1, 1], { allowFraction: true }).length === 0; }],
+    ['1 2 3 4 结果无重复', function () {
+      const s = solve([1, 2, 3, 4]);
+      return new Set(s).size === s.length && s.length > 0;
+    }]
+  ];
+  const lines = checks.map(function (c) { return (c[1]() ? 'PASS  ' : 'FAIL  ') + c[0]; });
+  const pre = document.createElement('pre');
+  pre.textContent = lines.join('\n');
+  document.body.appendChild(pre);
+}
+</script>
 </body>
 </html>
