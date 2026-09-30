@@ -81,7 +81,7 @@ test('2 3 4 6 有解', () => {
 
 - [ ] **Step 2: 跑测试确认失败**
 
-Run: `node --test test/`
+Run: `node --test 'test/**/*.mjs'`
 Expected: FAIL —— `index.html` 不存在，读取文件抛出 ENOENT。
 
 - [ ] **Step 3: 写最小实现**
@@ -181,7 +181,7 @@ function solve(nums, options) {
 
 - [ ] **Step 4: 跑测试确认通过**
 
-Run: `node --test test/`
+Run: `node --test 'test/**/*.mjs'`
 Expected: 3 个测试 PASS。
 
 - [ ] **Step 5: 提交**
@@ -228,7 +228,7 @@ test('结果按长度升序、同长度按字典序排列', () => {
 
 - [ ] **Step 2: 跑测试确认失败**
 
-Run: `node --test test/`
+Run: `node --test 'test/**/*.mjs'`
 Expected: FAIL —— 第一条断言得到 `((8 ÷ ((3 - (8 ÷ 3)))))` 这类全括号串。
 
 - [ ] **Step 3: 实现**
@@ -262,7 +262,7 @@ function compareExpr(a, b) {
 
 - [ ] **Step 4: 跑测试确认通过**
 
-Run: `node --test test/`
+Run: `node --test 'test/**/*.mjs'`
 Expected: 全部 PASS（Task 1 的求值断言仍成立，因为括号变化不改变求值）。
 
 - [ ] **Step 5: 提交**
@@ -330,7 +330,7 @@ test('求解结果中不存在重复算式', () => {
 
 - [ ] **Step 2: 跑测试确认失败**
 
-Run: `node --test test/`
+Run: `node --test 'test/**/*.mjs'`
 Expected: FAIL —— `canonicalKey` 未定义。
 
 - [ ] **Step 3: 实现**
@@ -421,7 +421,7 @@ function canonicalKey(node) {
 
 - [ ] **Step 4: 跑测试确认通过**
 
-Run: `node --test test/`
+Run: `node --test 'test/**/*.mjs'`
 Expected: 全部 PASS。
 
 - [ ] **Step 5: 提交**
@@ -473,7 +473,7 @@ test('除零不产生解', () => {
 
 - [ ] **Step 2: 跑测试确认当前状态**
 
-Run: `node --test test/`
+Run: `node --test 'test/**/*.mjs'`
 Expected: 若 `3 3 8 8` 的整数/分数断言或含 `0` 的除零断言失败，说明 Task 1 的引擎有缺口，在 Step 3 修。若 4 个测试全部直接 PASS，说明 Task 1 的实现已覆盖分数模式，跳过修改、执行 Step 3 的核对后直接提交。
 
 - [ ] **Step 3: 核对 `allowFraction` 的传递链路**
@@ -488,7 +488,7 @@ Expected: 若 `3 3 8 8` 的整数/分数断言或含 `0` 的除零断言失败�
 
 - [ ] **Step 4: 跑测试确认通过**
 
-Run: `node --test test/`
+Run: `node --test 'test/**/*.mjs'`
 Expected: 全部 PASS。
 
 - [ ] **Step 5: 提交**
@@ -683,11 +683,11 @@ if (location.hash === '#selftest') {
 
 - [ ] **Step 3: 写 README.md**
 
-内容包含：用途、打开方式（双击 `index.html`）、数字范围 1–10、分数开关的含义与为何 3 3 8 8 必须开它、算法说明（递归两两合并 + 等价键去重，并说明分配律等价不消除）、自检入口 `index.html#selftest`、测试命令 `node --test test/`。
+内容包含：用途、打开方式（双击 `index.html`）、数字范围 1–10、分数开关的含义与为何 3 3 8 8 必须开它、算法说明（递归两两合并 + 等价键去重，并说明分配律等价不消除）、自检入口 `index.html#selftest`、测试命令 `node --test 'test/**/*.mjs'`。
 
 - [ ] **Step 4: 验证**
 
-1. Run: `node --test test/` → 全部 PASS。
+1. Run: `node --test 'test/**/*.mjs'` → 全部 PASS。
 2. Playwright 打开 `index.html#selftest` → 7 行全为 PASS。
 
 - [ ] **Step 5: 提交**
