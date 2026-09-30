@@ -3,6 +3,20 @@
 <head>
 <meta charset="utf-8">
 <title>24 点求解器</title>
+<style>
+body { font-family: -apple-system, "PingFang SC", sans-serif; margin: 0; padding: 32px; background: #f6f7f9; color: #1f2328; }
+main { max-width: 640px; margin: 0 auto; }
+h1 { font-size: 22px; margin: 0 0 20px; }
+.inputs { display: flex; gap: 8px; }
+.num-input { width: 72px; padding: 10px; font-size: 18px; text-align: center; border: 1px solid #d0d7de; border-radius: 6px; }
+.quick { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0; }
+.quick button { width: 34px; height: 34px; font-size: 14px; border: 1px solid #d0d7de; border-radius: 6px; background: #fff; cursor: pointer; }
+.actions { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.actions button { padding: 8px 16px; font-size: 14px; border: 1px solid #d0d7de; border-radius: 6px; background: #fff; cursor: pointer; }
+.error { color: #cf222e; }
+.count { font-weight: 600; }
+.solutions { line-height: 1.9; font-size: 16px; padding-left: 24px; }
+</style>
 </head>
 <body>
 <script id="solver">
@@ -185,6 +199,86 @@ function solve(nums, options) {
   return results.map(render).sort(compareExpr);
 }
 // ===== SOLVER END =====
+</script>
+<main>
+  <h1>24 点求解器</h1>
+  <div class="inputs">
+    <input class="num-input" type="number" min="1" max="10" step="1" aria-label="数字 1">
+    <input class="num-input" type="number" min="1" max="10" step="1" aria-label="数字 2">
+    <input class="num-input" type="number" min="1" max="10" step="1" aria-label="数字 3">
+    <input class="num-input" type="number" min="1" max="10" step="1" aria-label="数字 4">
+  </div>
+  <div class="quick" id="quick"></div>
+  <div class="actions">
+    <button id="solve-btn" type="button">求解</button>
+    <button id="random-btn" type="button">随机出题</button>
+    <label><input id="allow-fraction" type="checkbox"> 允许分数中间结果</label>
+  </div>
+  <p class="error" id="error" hidden></p>
+  <p class="count" id="count" hidden></p>
+  <ol class="solutions" id="solutions"></ol>
+</main>
+<script>
+const inputs = Array.from(document.querySelectorAll('.num-input'));
+const quick = document.getElementById('quick');
+const errorBox = document.getElementById('error');
+const countBox = document.getElementById('count');
+const listBox = document.getElementById('solutions');
+
+for (let n = 1; n <= 10; n++) {
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.textContent = String(n);
+  btn.addEventListener('click', function () {
+    const empty = inputs.find(function (i) { return i.value.trim() === ''; });
+    if (empty) empty.value = String(n);
+  });
+  quick.appendChild(btn);
+}
+
+function readInputs() {
+  const values = inputs.map(function (i) { return i.value.trim(); });
+  if (values.some(function (v) { return v === ''; })) return { error: '请填满 4 个数字' };
+  const nums = values.map(Number);
+  const bad = nums.some(function (v) { return !Number.isInteger(v) || v < 1 || v > 10; });
+  return bad ? { error: '请输入 1–10 的整数' } : { nums: nums };
+}
+
+function show(text) {
+  errorBox.textContent = text;
+  errorBox.hidden = false;
+}
+
+document.getElementById('solve-btn').addEventListener('click', function () {
+  const parsed = readInputs();
+  if (parsed.error) {
+    show(parsed.error);
+    countBox.hidden = true;
+    listBox.innerHTML = '';
+    return;
+  }
+  errorBox.hidden = true;
+  const solutions = solve(parsed.nums, { allowFraction: document.getElementById('allow-fraction').checked });
+  countBox.hidden = false;
+  listBox.innerHTML = '';
+  if (solutions.length === 0) {
+    countBox.textContent = '这组数字无解';
+    return;
+  }
+  countBox.textContent = '共 ' + solutions.length + ' 种解法';
+  for (const text of solutions) {
+    const li = document.createElement('li');
+    li.textContent = text;
+    listBox.appendChild(li);
+  }
+});
+
+document.getElementById('random-btn').addEventListener('click', function () {
+  inputs.forEach(function (i) {
+    i.value = String(Math.floor(Math.random() * 10) + 1);
+  });
+  errorBox.hidden = true;
+});
 </script>
 </body>
 </html>
