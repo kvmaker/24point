@@ -127,3 +127,9 @@ test('除零不产生解', () => {
     assert.ok(Math.abs(value - 24) < 1e-9, `${text} 求值不是 24`);
   }
 });
+
+test('整体符号相反的乘积不得同键', () => {
+  const pos = { op:'*', left:{op:'-',left:{num:1},right:{num:4}}, right:{op:'-',left:{num:1},right:{num:9}} }; //  24
+  const neg = { op:'*', left:{op:'-',left:{num:4},right:{num:1}}, right:{op:'-',left:{num:1},right:{num:9}} }; // -24
+  assert.notEqual(api.canonicalKey(pos), api.canonicalKey(neg));
+});

@@ -42,6 +42,7 @@ function makeRat(n, d) {
 function ratAdd(a, b) { return makeRat(a.n * b.d + b.n * a.d, a.d * b.d); }
 function ratSub(a, b) { return makeRat(a.n * b.d - b.n * a.d, a.d * b.d); }
 function ratMul(a, b) { return makeRat(a.n * b.n, a.d * b.d); }
+// b.n === 0 guard is redundant (makeRat already intercepts d===0), but kept for defensive clarity
 function ratDiv(a, b) { return b.n === 0 ? null : makeRat(a.n * b.d, a.d * b.n); }
 
 function combine(a, b, op, allowFraction) {
@@ -60,10 +61,10 @@ function combine(a, b, op, allowFraction) {
 const PREC = { '+': 1, '-': 1, '*': 2, '/': 2 };
 const SYMBOL = { '+': '+', '-': '-', '*': '×', '/': '÷' };
 
-function renderOperand(node, parentPrec, isRight) {
+function renderOperand(node, parentPrec, isRight, parentOp) {
   const childPrec = node.num !== undefined ? Infinity : PREC[node.op];
   const needParen = childPrec < parentPrec ||
-    (childPrec === parentPrec && isRight && parentPrec <= 2);
+    (childPrec === parentPrec && isRight && (parentOp === '-' || parentOp === '/'));
   const text = render(node);
   return needParen ? '(' + text + ')' : text;
 }
@@ -71,7 +72,7 @@ function renderOperand(node, parentPrec, isRight) {
 function render(node) {
   if (node.num !== undefined) return String(node.num);
   const prec = PREC[node.op];
-  return renderOperand(node.left, prec, false) + ' ' + SYMBOL[node.op] + ' ' + renderOperand(node.right, prec, true);
+  return renderOperand(node.left, prec, false, node.op) + ' ' + SYMBOL[node.op] + ' ' + renderOperand(node.right, prec, true, node.op);
 }
 
 function compareExpr(a, b) {
@@ -214,7 +215,7 @@ function solve(nums, options) {
     <button id="random-btn" type="button">随机出题</button>
     <label><input id="allow-fraction" type="checkbox"> 允许分数中间结果</label>
   </div>
-  <p class="error" id="error" hidden></p>
+  <p class="error" id="error" hidden aria-live="polite"></p>
   <p class="count" id="count" hidden></p>
   <ol class="solutions" id="solutions"></ol>
 </main>
@@ -244,17 +245,28 @@ function readInputs() {
   return bad ? { error: '请输入 1–10 的整数' } : { nums: nums };
 }
 
+function clearResults() {
+  countBox.hidden = true;
+  listBox.innerHTML = '';
+}
+
 function show(text) {
   errorBox.textContent = text;
   errorBox.hidden = false;
 }
 
+inputs.forEach(function (i) {
+  i.addEventListener('input', function () {
+    clearResults();
+    errorBox.hidden = true;
+  });
+});
+
 document.getElementById('solve-btn').addEventListener('click', function () {
   const parsed = readInputs();
   if (parsed.error) {
     show(parsed.error);
-    countBox.hidden = true;
-    listBox.innerHTML = '';
+    clearResults();
     return;
   }
   errorBox.hidden = true;
@@ -278,6 +290,7 @@ document.getElementById('random-btn').addEventListener('click', function () {
     i.value = String(Math.floor(Math.random() * 10) + 1);
   });
   errorBox.hidden = true;
+  clearResults();
 });
 </script>
 <script>

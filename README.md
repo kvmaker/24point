@@ -48,4 +48,6 @@ index.html#selftest
 node --test 'test/**/*.mjs'
 ```
 
-需要 Node.js 18+。
+需要 Node.js 21+。
+
+引擎代码位于 `index.html` 中 `// ===== SOLVER START =====` 与 `// ===== SOLVER END =====` 标记之间；`test/solver.test.mjs` 依赖这两个标记来提取代码，**不得删除这对标记**。
