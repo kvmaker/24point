@@ -97,3 +97,28 @@ test('镜像对合并：1 7 9 10（奇数 flip 只翻一个因子时两种写法
   // (1-9)×(7-10) 与 (9-1)×(10-7) 应合并为 1 条
   assert.equal(api.solve([1, 7, 9, 10]).length, 1);
 });
+
+test('3 3 8 8：整数模式无解，分数模式给出 8 ÷ (3 - 8 ÷ 3)', () => {
+  assert.deepEqual(api.solve([3, 3, 8, 8]), []);
+  assert.ok(api.solve([3, 3, 8, 8], { allowFraction: true }).includes('8 ÷ (3 - 8 ÷ 3)'));
+});
+
+test('1 5 5 5：整数模式无解，分数模式有解', () => {
+  assert.deepEqual(api.solve([1, 5, 5, 5]), []);
+  assert.ok(api.solve([1, 5, 5, 5], { allowFraction: true }).length > 0);
+});
+
+test('4 4 10 10 两种模式均有解，且分数模式每条求值均为 24', () => {
+  assert.ok(api.solve([4, 4, 10, 10]).includes('(10 × 10 - 4) ÷ 4'));
+  const solutions = api.solve([4, 4, 10, 10], { allowFraction: true });
+  assert.ok(solutions.length > 0);
+  for (const text of solutions) {
+    assert.ok(Math.abs(valueOf(text) - 24) < 1e-9, `${text} 求值不是 24`);
+  }
+});
+
+test('除零不产生解', () => {
+  for (const text of api.solve([5, 5, 5, 0], { allowFraction: true })) {
+    assert.doesNotThrow(() => valueOf(text));
+  }
+});
