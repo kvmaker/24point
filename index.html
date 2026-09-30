@@ -86,44 +86,62 @@ function mulFactors(node) {
   return [{ inv: false, node: node }];
 }
 
-function absorbNeg(node) {
-  if (node.num !== undefined) return { num: -node.num };
-  if (node.op === '*' || node.op === '/') {
-    return { op: node.op, left: absorbNeg(node.left), right: node.right };
-  }
-  if (node.op === '+' || node.op === '-') return { negOf: node };
-  return node;
-}
-
-function invert(node) {
-  if (node.num !== undefined) return { invNum: node.num };
-  return { invOf: node };
+function negatedChainKey(node) {
+  if (node.num !== undefined) return String(-node.num);
+  var terms = addTerms(node);
+  var keys = terms.map(function (t) {
+    var subKey = canonicalKey(t.node);
+    return t.sign === 1 ? '-' + subKey : subKey;
+  });
+  keys.sort();
+  return '(+ ' + keys.join(' ') + ')';
 }
 
 function canonicalKey(node) {
-  if (node.invNum !== undefined) return 'inv(' + node.invNum + ')';
-  if (node.invOf !== undefined) return 'inv(' + canonicalKey(node.invOf) + ')';
-  if (node.negOf !== undefined) return 'neg(' + canonicalKey(node.negOf) + ')';
-
-  const terms = addTerms(node);
+  var terms = addTerms(node);
   if (terms.length > 1 || terms[0].sign === -1) {
-    const keys = terms.map(function (t) {
-      return canonicalKey(t.sign === -1 ? absorbNeg(t.node) : t.node);
+    var keys = terms.map(function (t) {
+      var subKey = canonicalKey(t.node);
+      return t.sign === -1 ? '-' + subKey : subKey;
     });
     keys.sort();
     return '(+ ' + keys.join(' ') + ')';
   }
 
-  const atom = terms[0].node;
+  var atom = terms[0].node;
   if (atom.num !== undefined) return String(atom.num);
   if (atom.op === '*' || atom.op === '/') {
-    const keys = mulFactors(atom).map(function (f) {
-      return canonicalKey(f.inv ? invert(f.node) : f.node);
+    var factors = mulFactors(atom);
+    var polarized = factors.map(function (f) {
+      var baseKey = canonicalKey(f.node);
+      var negKey = negatedChainKey(f.node);
+      var flipped = negKey < baseKey;
+      var canonical = flipped ? negKey : baseKey;
+      var other = flipped ? baseKey : negKey;
+      return {
+        key: f.inv ? 'inv(' + canonical + ')' : canonical,
+        otherKey: f.inv ? 'inv(' + other + ')' : other,
+        flipped: flipped
+      };
     });
-    keys.sort();
-    return '(* ' + keys.join(' ') + ')';
+    var totalFlipped = polarized.reduce(function (s, p) { return s + (p.flipped ? 1 : 0); }, 0);
+    if (totalFlipped % 2 === 1) {
+      // 找规范键最大的已 flip 因子，改用其正极性形式，保证结果与因子遍历顺序无关
+      var maxIdx = -1;
+      var maxCKey = '';
+      for (var i = 0; i < polarized.length; i++) {
+        if (polarized[i].flipped && polarized[i].key > maxCKey) {
+          maxCKey = polarized[i].key;
+          maxIdx = i;
+        }
+      }
+      polarized[maxIdx] = { key: polarized[maxIdx].otherKey, otherKey: polarized[maxIdx].key, flipped: false };
+    }
+    var sortedKeys = polarized.map(function (p) { return p.key; });
+    sortedKeys.sort();
+    return '(* ' + sortedKeys.join(' ') + ')';
   }
-  return String(atom.num);
+  throw new Error('canonicalKey: 无法识别的节点');
 }
 
 function solve(nums, options) {

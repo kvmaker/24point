@@ -17,7 +17,7 @@ test('1 1 1 1 在整数模式下无解', () => {
 
 test('1 2 3 4 有解，且每条算式求值均为 24', () => {
   const solutions = api.solve([1, 2, 3, 4]);
-  assert.ok(solutions.length > 0);
+  assert.equal(solutions.length, 4);
   for (const text of solutions) {
     assert.ok(Math.abs(valueOf(text) - 24) < 1e-9, `${text} 求值不是 24`);
   }
@@ -81,4 +81,14 @@ test('求解结果中不存在重复算式', () => {
     const solutions = api.solve(nums);
     assert.equal(new Set(solutions).size, solutions.length);
   }
+});
+
+test('镜像对（符号整体翻转）合并为一条：1 1 4 9', () => {
+  // (1-4)×(1-9) 与 (4-1)×(9-1) 是同一个乘积思路，去重后只保留 1 条
+  const solutions = api.solve([1, 1, 4, 9]);
+  assert.equal(solutions.length, 1);
+  // 两种写法的规范键必须相同
+  const f1 = { op: '*', left: { op: '-', left: { num: 1 }, right: { num: 4 } }, right: { op: '-', left: { num: 1 }, right: { num: 9 } } };
+  const f2 = { op: '*', left: { op: '-', left: { num: 4 }, right: { num: 1 } }, right: { op: '-', left: { num: 9 }, right: { num: 1 } } };
+  assert.equal(api.canonicalKey(f1), api.canonicalKey(f2));
 });
